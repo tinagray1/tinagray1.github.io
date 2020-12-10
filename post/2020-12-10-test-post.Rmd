@@ -1,0 +1,13 @@
+---
+title: test post
+author: ''
+date: '2020-12-10'
+slug: test-post
+categories: []
+tags: []
+description: ''
+---
+hiiii this is my first blog post for lab 13
+[Link to project 1](/projects/project1/)
+
+[Link to google](https://www.google.com)

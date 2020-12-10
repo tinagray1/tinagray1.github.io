@@ -1,0 +1,214 @@
+---
+title: 'Project 2: Modeling, Testing, and Predicting'
+author: "SDS348"
+date: ''
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+hook_output = knit_hooks$get('output')
+knit_hooks$set(output = function(x, options) {
+  # this hook is used only when the linewidth option is not NULL
+  if (!is.null(n <- options$linewidth)) {
+    x = knitr:::split_lines(x)
+    # any lines wider than n should be wrapped
+    if (any(nchar(x) > n)) x = strwrap(x, width = n)
+    x = paste(x, collapse = '\n')
+  }
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE,fig.align="center",warning=FALSE,message=FALSE,fig.width=8, fig.height=5, linewidth=60)
+options(tibble.width = 100,width = 100)
+library(tidyverse)
+```
+
+
+
+## Dataset
+
+I am using the Wong dataset from the carData package. This dataset shows the results for a study about IQ recovery after a coma. It measures the duration of the coma, the number of days after the coma that IQ was measured, age, gender, performance IQ (PIQ), and verbal IQ (VIQ). There are 331 observations in this dataset.
+```{r}
+library(carData)
+glimpse(Wong)
+```
+
+## MANOVA Testing
+```{r}
+library(rstatix)
+group <- Wong$sex 
+DVs <- Wong %>% select(duration, piq, viq, days)
+# I excluded the id variable because it doesn't make sense to include it.
+
+#Test multivariate normality for each group (null: assumption met)
+sapply(split(DVs,group), mshapiro_test)
+
+man1<-manova(cbind(duration, piq, viq, days)~sex, data=Wong)
+summary(man1)
+#probability of type 1 error
+1-.95^1
+```
+The data did not meet MANOVA assumptions. After testing for multivariate normality, the p values were both less than .05, therefore, the null hypothesis that there is multivariate normality was rejected. The null hypothesis of the MANOVA is that for each response variable (duration, piq, viq, and days) the means of all groups are equal. The MANOVA test had a p value of .1569. Since the p value of the manova test was greater than .05, we fail to reject the null hypothesis. There was no need to do any univariate ANOVA or post hoc tests because there was not significant evidence of a mean difference across groups. I performed a total of one test, so the unadjusted probabilty of a type 1 error is .05. There was no need for a bonferroni correction because only one test was performed.
+
+## Randomization Test
+
+Null Hypothesis: The sample mean for the difference in PIQ for males and females is not significantly different from the population mean of the difference in PIQ between males and females.
+Alternative Hypothesis: The sample mean for the difference in PIQ for males and females is significantly different from the population mean of the difference in PIQ between males and females.
+```{r}
+ggplot(Wong,aes(piq,fill=sex))+geom_histogram(bins=6.5)+
+  facet_wrap(~sex,ncol=2)+theme(legend.position="none")
+t.test(data=Wong,piq~sex)
+rand_dist<-vector() 
+mean(Wong[Wong$sex == "Male",]$piq)-mean(Wong[Wong$sex == "Female",]$piq)
+set.seed(348)
+for(i in 1:5000){
+new<-data.frame(PIQ=sample(Wong$piq),sex=Wong$sex) 
+rand_dist[i]<-mean(new[new$sex=="Male",]$PIQ)-   
+              mean(new[new$sex=="Female",]$PIQ)} 
+mean(rand_dist>2.07156 | rand_dist< -2.017156)
+
+data.frame(rand_dist) %>%ggplot(aes(rand_dist)) + geom_histogram(aes(y=..density..))+   stat_function(fun=dt,args=list(df=330),geom="line") + geom_vline(xintercept=-2.07156, color="red") +geom_vline(xintercept = 2.07156, color ="red")
+```
+The t test gave a p value of .3725. Since the p value is greater than .05, we fail to reject the null hypothesis. There is not enough evidence to suggest that the sample mean difference in PIQ between males and females is different from the population's mean difference. The randomization test gives a p value of .3192.
+
+
+## Linear Regression Model
+```{r}
+library(lmtest)
+library(sandwich)
+Wong$piq_c <- Wong$piq - mean(Wong$piq)
+Wong$duration_c <- Wong$duration - mean(Wong$duration)
+fit <- lm(piq_c~duration_c*sex, data = Wong)
+summary(fit)
+ggplot(Wong, aes(duration_c,piq_c, color=sex)) + geom_point() +
+  geom_smooth(method="lm")
+shapiro.test(fit$residuals)
+bptest(fit)
+coeftest(fit, vcov = vcovHC(fit))
+```
+For a female with average coma duration, PIQ will be 1.4527 points lower than the average PIQ. For a male with average coma duration, PIQ will be 1.1002 points higher than the average PIQ. Controlling for gender, for each day increase in coma duration the PIQ will be .6125 points lower than the average PIQ. The slope for PIQ is .5456 greater for males compared to females.
+The assumption of linearity has not been met. The points don't appear to have a linear pattern, most of them are crowded near the x axis.
+The assumption of normality has been met. The shapiro-wilk normality test had a p value of .2094, which is greater than .05. We fail to reject the null hypothesis, so the data is normally distributed.
+The assumption of homoskedasticity has been met. The Breush-Pagan test has a p value of .09321 which is greater than .05. We fail to reject the null hypothesis, so the data is homoskedastic.
+After running the regression results with robust standard errors, both the duration and the interaction between duration and sex have p values less than .05. This means that controlling for gender, duration explains variation in PIQ. It also means that the interaction between gender and duration explains variation in PIQ. There were no significant changes that came from running with robust standard error.
+The model explains 6.749% of the variation in outcome (adjusted R square).
+
+## Bootstrapped SE
+```{r}
+set.seed(348)
+samp_distn<-replicate(5000, {  
+boot_dat <- sample_frac(Wong, replace=T)
+fit1 <- lm(piq_c~duration_c*sex, data=boot_dat)  
+coef(fit1) }) 
+samp_distn %>% t %>% as.data.frame %>% summarise_all(sd)
+samp_distn %>% t %>% as.data.frame %>% pivot_longer(1:3) %>% group_by(name) %>% summarize(lower=quantile(value,.025), upper=quantile(value,.975))
+```
+Compared to the regression results with robust standard error, the standard error of the bootstrapped SE for all variables has decreased. Since the SE has decreased, the p value has also decreased.
+
+## Logistic Regression Model
+```{r}
+library(plotROC)
+fit2 <- glm(sex~piq+duration, data = Wong, family = "binomial")
+summary(fit2)
+exp(coef(fit2))
+prob <- predict(fit2, type = "response")
+truth <- Wong$sex
+table(prediction=as.numeric(prob>.5), truth)%>%addmargins
+(71+260)/331 #accuracy
+260/260 #sensitivity
+71/71 #specificity
+
+class_diag<-function(probs,truth){
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+  f1=2*(sens*ppv)/(sens+ppv)
+
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE){
+    truth<-as.numeric(truth)-1}
+  
+  #CALCULATE EXACT AUC
+  ord<-order(probs, decreasing=TRUE)
+  probs <- probs[ord]; truth <- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,f1,auc)
+}
+class_diag(prob,truth)
+roc <- ggplot(Wong)+geom_roc(aes(d=sex, m=piq+duration))
+roc
+Wong$logit<-predict(fit2,type="link")
+Wong%>%ggplot()+geom_density(aes(logit,color=sex,fill=sex), alpha=.4)+
+  theme(legend.position=c(.85,.85))+geom_vline(xintercept=0)+xlab("predictor (logit)")
+```
+Controlling for piq, for every 1 day increase in coma duration odds of being a female increase by a factor of 1.0160373. Controlling for coma duration, for every 1 point increase in PIQ, odds of being female decrease by a factor of .9946916.
+
+The accuracy, specificity, and senstivity of the model are all equal to 1 because the predictions based on fit2 are the same as the population.
+
+The ppv is .7854985 and the auc is .5903846. The AUC is between .5 and .6 so the model is bad at predicting new data. The ROC plot looks somewhat linear, so it is not good because there is not a lot of area under the curve.
+
+## Logistic Regression Model Part 2
+```{r}
+Wong <- Wong %>% select(-id)
+fit3 <- glm(sex~., data=Wong, family = "binomial")
+prob1 <- predict(fit3, type = "response")
+class_diag(prob1, Wong$sex)
+truth <- Wong$sex
+table(prediction=as.numeric(prob>.5), truth)
+
+set.seed(348)
+k=10
+
+data <- Wong %>% sample_frac 
+folds <- ntile(1:nrow(data),n=10) 
+
+diags<-NULL
+for(i in 1:k){
+  train <- data[folds!=i,] 
+  test <- data[folds==i,] 
+  truth <- test$sex 
+  
+  fit <- glm(sex~., data=train, family="binomial")
+  probs <- predict(fit, newdata=test, type="response")
+  
+  diags<-rbind(diags,class_diag(probs,truth))
+}
+
+summarize_all(diags,mean)
+
+library(glmnet)
+set.seed(348)
+y<-as.matrix(Wong$sex) 
+preds<-model.matrix(sex~.,data=Wong)[,-1] 
+cv<-cv.glmnet(preds,y,family="binomial")
+lasso_fit<-glmnet(preds,y,family="binomial",lambda=cv$lambda.1se)
+coef(lasso_fit)
+```
+Accuracy, sensitivity, and specificity are all equal to 1 again. The predictions made from fit3 match the population. The AUC is .5959913, which is slightly higher than it was looking at only piq and duration, but it is still bad. The ppv is .7854985, so it has not changed.
+
+10 fold cv gave a lower auc and ppv. The ppv was .7854724 and the auc was .5411298, which is wrose than the other auc. Acc, sens, and spec are still the same.
+
+None of the variables were retained when LASSO was performed. This means that none of the variables in this data set are useful for predicting the gender of the patient.
+
+
+
+
+
+
+

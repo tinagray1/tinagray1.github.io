@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Tina Gray" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 2: Modeling, Testing, and Predicting</title>
+    <meta name="generator" content="Hugo 0.79.0" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project2/">Project 2: Modeling, Testing, and Predicting</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="dataset" class="section level2">
+<h2>Dataset</h2>
+<p>I am using the Wong dataset from the carData package. This dataset shows the results for a study about IQ recovery after a coma. It measures the duration of the coma, the number of days after the coma that IQ was measured, age, gender, performance IQ (PIQ), and verbal IQ (VIQ). There are 331 observations in this dataset.</p>
+<pre class="r"><code>library(carData)
+glimpse(Wong)</code></pre>
+<pre><code>## Rows: 331
+## Columns: 7
+## $ id &lt;int&gt; 3358, 3535, 3547, 3592, 3728, 3790, 3807,
+3808, 4253, 4356, 4384, 4542, 4705, 47…
+## $ days &lt;dbl&gt; 30, 16, 40, 13, 19, 13, 37, 31, 40, 31, 35,
+22, 18, 15, 36, 46, 33, 26, 35, 33, …
+## $ duration &lt;int&gt; 4, 17, 1, 10, 6, 3, 5, 7, 3, 7, 8, 11,
+1, 25, 0, 4, 5, 1, 5, 1, 4, 8, 1, 3, 7, 7…
+## $ sex &lt;fct&gt; Male, Male, Male, Male, Male, Male, Male,
+Male, Male, Male, Male, Female, Female…
+## $ age &lt;dbl&gt; 20.67077, 55.28816, 55.91513, 61.66461,
+30.12731, 57.06229, 24.67625, 28.26831, …
+## $ piq &lt;int&gt; 87, 95, 95, 59, 67, 76, 74, 91, 115, 86, 76,
+71, 127, 82, 88, 69, 102, 77, 82, 1…
+## $ viq &lt;int&gt; 89, 77, 116, 73, 73, 69, 77, 110, 110, 83,
+90, 89, 109, 85, 97, 88, 117, 89, 95,…</code></pre>
+</div>
+<div id="manova-testing" class="section level2">
+<h2>MANOVA Testing</h2>
+<pre class="r"><code>library(rstatix)
+group &lt;- Wong$sex 
+DVs &lt;- Wong %&gt;% select(duration, piq, viq, days)
+# I excluded the id variable because it doesn&#39;t make sense to include it.
+
+#Test multivariate normality for each group (null: assumption met)
+sapply(split(DVs,group), mshapiro_test)</code></pre>
+<pre><code>##           Female       Male        
+## statistic 0.8359404    0.4829275   
+## p.value   2.122462e-07 7.353758e-27</code></pre>
+<pre class="r"><code>man1&lt;-manova(cbind(duration, piq, viq, days)~sex, data=Wong)
+summary(man1)</code></pre>
+<pre><code>##            Df   Pillai approx F num Df den Df Pr(&gt;F)
+## sex         1 0.020065   1.6688      4    326 0.1569
+## Residuals 329</code></pre>
+<pre class="r"><code>#probability of type 1 error
+1-.95^1</code></pre>
+<pre><code>## [1] 0.05</code></pre>
+<p>The data did not meet MANOVA assumptions. After testing for multivariate normality, the p values were both less than .05, therefore, the null hypothesis that there is multivariate normality was rejected. The null hypothesis of the MANOVA is that for each response variable (duration, piq, viq, and days) the means of all groups are equal. The MANOVA test had a p value of .1569. Since the p value of the manova test was greater than .05, we fail to reject the null hypothesis. There was no need to do any univariate ANOVA or post hoc tests because there was not significant evidence of a mean difference across groups. I performed a total of one test, so the unadjusted probabilty of a type 1 error is .05. There was no need for a bonferroni correction because only one test was performed.</p>
+</div>
+<div id="randomization-test" class="section level2">
+<h2>Randomization Test</h2>
+<p>Null Hypothesis: The sample mean for the difference in PIQ for males and females is not significantly different from the population mean of the difference in PIQ between males and females. Alternative Hypothesis: The sample mean for the difference in PIQ for males and females is significantly different from the population mean of the difference in PIQ between males and females.</p>
+<pre class="r"><code>ggplot(Wong,aes(piq,fill=sex))+geom_histogram(bins=6.5)+
+  facet_wrap(~sex,ncol=2)+theme(legend.position=&quot;none&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-3-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>t.test(data=Wong,piq~sex)</code></pre>
+<pre><code>##
+## Welch Two Sample t-test
+##
+## data: piq by sex
+## t = 0.89608, df = 95.285, p-value = 0.3725
+## alternative hypothesis: true difference in means is not
+equal to 0
+## 95 percent confidence interval:
+## -2.517771 6.660891
+## sample estimates:
+## mean in group Female mean in group Male
+## 89.18310 87.11154</code></pre>
+<pre class="r"><code>rand_dist&lt;-vector() 
+mean(Wong[Wong$sex == &quot;Male&quot;,]$piq)-mean(Wong[Wong$sex == &quot;Female&quot;,]$piq)</code></pre>
+<pre><code>## [1] -2.07156</code></pre>
+<pre class="r"><code>set.seed(348)
+for(i in 1:5000){
+new&lt;-data.frame(PIQ=sample(Wong$piq),sex=Wong$sex) 
+rand_dist[i]&lt;-mean(new[new$sex==&quot;Male&quot;,]$PIQ)-   
+              mean(new[new$sex==&quot;Female&quot;,]$PIQ)} 
+mean(rand_dist&gt;2.07156 | rand_dist&lt; -2.017156)</code></pre>
+<pre><code>## [1] 0.3192</code></pre>
+<pre class="r"><code>data.frame(rand_dist) %&gt;%ggplot(aes(rand_dist)) + geom_histogram(aes(y=..density..))+   stat_function(fun=dt,args=list(df=330),geom=&quot;line&quot;) + geom_vline(xintercept=-2.07156, color=&quot;red&quot;) +geom_vline(xintercept = 2.07156, color =&quot;red&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-3-2.png" width="768" style="display: block; margin: auto;" /> The t test gave a p value of .3725. Since the p value is greater than .05, we fail to reject the null hypothesis. There is not enough evidence to suggest that the sample mean difference in PIQ between males and females is different from the population's mean difference. The randomization test gives a p value of .3192.</p>
+</div>
+<div id="linear-regression-model" class="section level2">
+<h2>Linear Regression Model</h2>
+<pre class="r"><code>library(lmtest)
+library(sandwich)
+Wong$piq_c &lt;- Wong$piq - mean(Wong$piq)
+Wong$duration_c &lt;- Wong$duration - mean(Wong$duration)
+fit &lt;- lm(piq_c~duration_c*sex, data = Wong)
+summary(fit)</code></pre>
+<pre><code>##
+## Call:
+## lm(formula = piq_c ~ duration_c * sex, data = Wong)
+##
+## Residuals:
+## Min 1Q Median 3Q Max
+## -42.409 -10.402 -0.959 9.135 43.041
+##
+## Coefficients:
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) -1.4527 1.8577 -0.782 0.435
+## duration_c -0.6125 0.1325 -4.623 5.44e-06 ***
+## sexMale 1.1002 2.0674 0.532 0.595
+## duration_c:sexMale 0.5456 0.1363 4.004 7.72e-05 ***
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Residual standard error: 14.61 on 327 degrees of freedom
+## Multiple R-squared: 0.07597, Adjusted R-squared: 0.06749
+## F-statistic: 8.961 on 3 and 327 DF, p-value: 1.013e-05</code></pre>
+<pre class="r"><code>ggplot(Wong, aes(duration_c,piq_c, color=sex)) + geom_point() +
+  geom_smooth(method=&quot;lm&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-4-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>shapiro.test(fit$residuals)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  fit$residuals
+## W = 0.99394, p-value = 0.2094</code></pre>
+<pre class="r"><code>bptest(fit)</code></pre>
+<pre><code>## 
+##  studentized Breusch-Pagan test
+## 
+## data:  fit
+## BP = 6.4118, df = 3, p-value = 0.09321</code></pre>
+<pre class="r"><code>coeftest(fit, vcov = vcovHC(fit))</code></pre>
+<pre><code>##
+## t test of coefficients:
+##
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) -1.45267 1.91257 -0.7595 0.4480791
+## duration_c -0.61249 0.14182 -4.3189 2.082e-05 ***
+## sexMale 1.10018 2.10624 0.5223 0.6017872
+## duration_c:sexMale 0.54559 0.14459 3.7735 0.0001911 ***
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<p>For a female with average coma duration, PIQ will be 1.4527 points lower than the average PIQ. For a male with average coma duration, PIQ will be 1.1002 points higher than the average PIQ. Controlling for gender, for each day increase in coma duration the PIQ will be .6125 points lower than the average PIQ. The slope for PIQ is .5456 greater for males compared to females. The assumption of linearity has not been met. The points don't appear to have a linear pattern, most of them are crowded near the x axis. The assumption of normality has been met. The shapiro-wilk normality test had a p value of .2094, which is greater than .05. We fail to reject the null hypothesis, so the data is normally distributed. The assumption of homoskedasticity has been met. The Breush-Pagan test has a p value of .09321 which is greater than .05. We fail to reject the null hypothesis, so the data is homoskedastic. After running the regression results with robust standard errors, both the duration and the interaction between duration and sex have p values less than .05. This means that controlling for gender, duration explains variation in PIQ. It also means that the interaction between gender and duration explains variation in PIQ. There were no significant changes that came from running with robust standard error. The model explains 6.749% of the variation in outcome (adjusted R square).</p>
+</div>
+<div id="bootstrapped-se" class="section level2">
+<h2>Bootstrapped SE</h2>
+<pre class="r"><code>set.seed(348)
+samp_distn&lt;-replicate(5000, {  
+boot_dat &lt;- sample_frac(Wong, replace=T)
+fit1 &lt;- lm(piq_c~duration_c*sex, data=boot_dat)  
+coef(fit1) }) 
+samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% summarise_all(sd)</code></pre>
+<pre><code>##   (Intercept) duration_c  sexMale duration_c:sexMale
+## 1    1.828472  0.1256165 2.035287          0.1294586</code></pre>
+<pre class="r"><code>samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% pivot_longer(1:3) %&gt;% group_by(name) %&gt;% summarize(lower=quantile(value,.025), upper=quantile(value,.975))</code></pre>
+<pre><code>## # A tibble: 3 x 3
+##   name         lower  upper
+##   &lt;chr&gt;        &lt;dbl&gt;  &lt;dbl&gt;
+## 1 (Intercept) -5.11   2.01 
+## 2 duration_c  -0.913 -0.424
+## 3 sexMale     -2.76   5.10</code></pre>
+<p>Compared to the regression results with robust standard error, the standard error of the bootstrapped SE for all variables has decreased. Since the SE has decreased, the p value has also decreased.</p>
+</div>
+<div id="logistic-regression-model" class="section level2">
+<h2>Logistic Regression Model</h2>
+<pre class="r"><code>library(plotROC)
+fit2 &lt;- glm(sex~piq+duration, data = Wong, family = &quot;binomial&quot;)
+summary(fit2)</code></pre>
+<pre><code>##
+## Call:
+## glm(formula = sex ~ piq + duration, family = &quot;binomial&quot;,
+data = Wong)
+##
+## Deviance Residuals:
+## Min 1Q Median 3Q Max
+## -2.1871 0.4707 0.6849 0.7358 0.8243
+##
+## Coefficients:
+## Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept) 1.581041 0.836058 1.891 0.0586 .
+## piq -0.005323 0.009031 -0.589 0.5556
+## duration 0.015910 0.009529 1.670 0.0950 .
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## (Dispersion parameter for binomial family taken to be 1)
+##
+## Null deviance: 344.15 on 330 degrees of freedom
+## Residual deviance: 338.98 on 328 degrees of freedom
+## AIC: 344.98
+##
+## Number of Fisher Scoring iterations: 5</code></pre>
+<pre class="r"><code>exp(coef(fit2))</code></pre>
+<pre><code>## (Intercept)         piq    duration 
+##   4.8600106   0.9946916   1.0160373</code></pre>
+<pre class="r"><code>prob &lt;- predict(fit2, type = &quot;response&quot;)
+truth &lt;- Wong$sex
+table(prediction=as.numeric(prob&gt;.5), truth)%&gt;%addmargins</code></pre>
+<pre><code>##           truth
+## prediction Female Male Sum
+##        1       71  260 331
+##        Sum     71  260 331</code></pre>
+<pre class="r"><code>(71+260)/331 #accuracy</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>260/260 #sensitivity</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>71/71 #specificity</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>class_diag&lt;-function(probs,truth){
+  tab&lt;-table(factor(probs&gt;.5,levels=c(&quot;FALSE&quot;,&quot;TRUE&quot;)),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+  f1=2*(sens*ppv)/(sens+ppv)
+
+  if(is.numeric(truth)==FALSE &amp; is.logical(truth)==FALSE){
+    truth&lt;-as.numeric(truth)-1}
+  
+  #CALCULATE EXACT AUC
+  ord&lt;-order(probs, decreasing=TRUE)
+  probs &lt;- probs[ord]; truth &lt;- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup&lt;-c(probs[-1]&gt;=probs[-length(probs)], FALSE)
+  TPR&lt;-c(0,TPR[!dup],1); FPR&lt;-c(0,FPR[!dup],1)
+  
+  n &lt;- length(TPR)
+  auc&lt;- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,f1,auc)
+}
+class_diag(prob,truth)</code></pre>
+<pre><code>##            acc sens spec       ppv        f1       auc
+## Male 0.7854985    1    0 0.7854985 0.8798646 0.5903846</code></pre>
+<pre class="r"><code>roc &lt;- ggplot(Wong)+geom_roc(aes(d=sex, m=piq+duration))
+roc</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-6-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>Wong$logit&lt;-predict(fit2,type=&quot;link&quot;)
+Wong%&gt;%ggplot()+geom_density(aes(logit,color=sex,fill=sex), alpha=.4)+
+  theme(legend.position=c(.85,.85))+geom_vline(xintercept=0)+xlab(&quot;predictor (logit)&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-6-2.png" width="768" style="display: block; margin: auto;" /> Controlling for piq, for every 1 day increase in coma duration odds of being a female increase by a factor of 1.0160373. Controlling for coma duration, for every 1 point increase in PIQ, odds of being female decrease by a factor of .9946916.</p>
+<p>The accuracy, specificity, and senstivity of the model are all equal to 1 because the predictions based on fit2 are the same as the population.</p>
+<p>The ppv is .7854985 and the auc is .5903846. The AUC is between .5 and .6 so the model is bad at predicting new data. The ROC plot looks somewhat linear, so it is not good because there is not a lot of area under the curve.</p>
+</div>
+<div id="logistic-regression-model-part-2" class="section level2">
+<h2>Logistic Regression Model Part 2</h2>
+<pre class="r"><code>Wong &lt;- Wong %&gt;% select(-id)
+fit3 &lt;- glm(sex~., data=Wong, family = &quot;binomial&quot;)
+prob1 &lt;- predict(fit3, type = &quot;response&quot;)
+class_diag(prob1, Wong$sex)</code></pre>
+<pre><code>##            acc sens spec       ppv        f1       auc
+## Male 0.7854985    1    0 0.7854985 0.8798646 0.5959913</code></pre>
+<pre class="r"><code>truth &lt;- Wong$sex
+table(prediction=as.numeric(prob&gt;.5), truth)</code></pre>
+<pre><code>##           truth
+## prediction Female Male
+##          1     71  260</code></pre>
+<pre class="r"><code>set.seed(348)
+k=10
+
+data &lt;- Wong %&gt;% sample_frac 
+folds &lt;- ntile(1:nrow(data),n=10) 
+
+diags&lt;-NULL
+for(i in 1:k){
+  train &lt;- data[folds!=i,] 
+  test &lt;- data[folds==i,] 
+  truth &lt;- test$sex 
+  
+  fit &lt;- glm(sex~., data=train, family=&quot;binomial&quot;)
+  probs &lt;- predict(fit, newdata=test, type=&quot;response&quot;)
+  
+  diags&lt;-rbind(diags,class_diag(probs,truth))
+}
+
+summarize_all(diags,mean)</code></pre>
+<pre><code>##         acc sens spec       ppv        f1       auc
+## 1 0.7854724    1    0 0.7854724 0.8788653 0.5411298</code></pre>
+<pre class="r"><code>library(glmnet)
+set.seed(348)
+y&lt;-as.matrix(Wong$sex) 
+preds&lt;-model.matrix(sex~.,data=Wong)[,-1] 
+cv&lt;-cv.glmnet(preds,y,family=&quot;binomial&quot;)
+lasso_fit&lt;-glmnet(preds,y,family=&quot;binomial&quot;,lambda=cv$lambda.1se)
+coef(lasso_fit)</code></pre>
+<pre><code>## 9 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                       s0
+## (Intercept) 1.298002e+00
+## days        .           
+## duration    .           
+## age         .           
+## piq         .           
+## viq         .           
+## piq_c       .           
+## duration_c  .           
+## logit       2.842290e-16</code></pre>
+<p>Accuracy, sensitivity, and specificity are all equal to 1 again. The predictions made from fit3 match the population. The AUC is .5959913, which is slightly higher than it was looking at only piq and duration, but it is still bad. The ppv is .7854985, so it has not changed.</p>
+<p>10 fold cv gave a lower auc and ppv. The ppv was .7854724 and the auc was .5411298, which is wrose than the other auc. Acc, sens, and spec are still the same.</p>
+<p>None of the variables were retained when LASSO was performed. This means that none of the variables in this data set are useful for predicting the gender of the patient.</p>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>
