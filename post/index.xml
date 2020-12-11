@@ -8,6 +8,15 @@
     <language>en-US</language>
     <lastBuildDate>Thu, 10 Dec 2020 00:00:00 +0000</lastBuildDate><atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Learning About Python</title>
+      <link>/post/2020/12/10/learning-about-python/</link>
+      <pubDate>Thu, 10 Dec 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2020/12/10/learning-about-python/</guid>
+      <description>After spending the majority of the semester using RStudio, I was excited to get to learn about a programming language that I had never worked with before. One of the features of python I was impressed by was the interactive plots (shown below)! Being able to adjust the mean and standard deviation and watch the plot instantly change was really different from the stuff we focused on in R. You can use the reticulate package to have R and Python talk to each other too!</description>
+    </item>
+    
+    <item>
       <title>test post</title>
       <link>/post/2020/12/10/test-post/</link>
       <pubDate>Thu, 10 Dec 2020 00:00:00 +0000</pubDate>
@@ -15,17 +24,6 @@
       <guid>/post/2020/12/10/test-post/</guid>
       <description>hiiii this is my first blog post for lab 13 Link to project 1
 Link to google</description>
-    </item>
-    
-    <item>
-      <title>Hello R Markdown</title>
-      <link>/post/2015/07/23/hello-r-markdown/</link>
-      <pubDate>Thu, 23 Jul 2015 21:13:14 -0500</pubDate>
-      
-      <guid>/post/2015/07/23/hello-r-markdown/</guid>
-      <description>R Markdown This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
-You can embed an R code chunk like this:
-summary(cars) ## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 26.00 ## Median :15.0 Median : 36.00 ## Mean :15.4 Mean : 42.98 ## 3rd Qu.</description>
     </item>
     
   </channel>

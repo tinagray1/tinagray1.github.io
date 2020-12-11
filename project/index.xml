@@ -12,8 +12,7 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/project/project1/</guid>
-      <description>Data Wrangling and Data Exploration Instructions A knitted R Markdown document (ideally HTML) and the raw R Markdown file (as .Rmd) should both be submitted to Canvas by 11:59pm on 10/11/2020. These two documents will be graded jointly, so they must be consistent (i.e., don’t change the R Markdown file without also updating the knitted document).
-The text of the document should provide a narrative structure around your code/output. All results presented must have corresponding code.</description>
+      <description>Data Wrangling and Data Exploration library(tidyverse) library(readr) X2016_tooth_decay_Sheet1 &amp;lt;- read_csv(&amp;quot;2016 tooth decay - Sheet1.csv&amp;quot;) library(readr) X2016_drug_overdose_data_Sheet1 &amp;lt;- read_csv(&amp;quot;2016 drug overdose data - Sheet1.csv&amp;quot;) library(readr) Current_Cigarette_Use_Among_Adults_Behavior_Risk_Factor_Surveillance_System_2018 &amp;lt;- read_csv(&amp;quot;Current Cigarette Use Among Adults (Behavior Risk Factor Surveillance System) 2018.csv&amp;quot;) cigs &amp;lt;- Current_Cigarette_Use_Among_Adults_Behavior_Risk_Factor_Surveillance_System_2018 drugs &amp;lt;- X2016_drug_overdose_data_Sheet1 teeth &amp;lt;- X2016_tooth_decay_Sheet1 cigs &amp;lt;- cigs %&amp;gt;% rename(cig.use.rate = Data_Value, cig.n = Sample_Size) drugs &amp;lt;- drugs %&amp;gt;% rename(od.death.rate = `Age Adjusted Rate`, n.deaths = `Number of Deaths`) teeth &amp;lt;- teeth %&amp;gt;% rename(lost.</description>
     </item>
     
     <item>

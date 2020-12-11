@@ -1,0 +1,20 @@
+---
+title: Learning About Python
+author: ''
+date: '2020-12-10'
+slug: learning-about-python
+categories: []
+tags: []
+description: ''
+---
+After spending the majority of the semester using RStudio, I was excited to get to learn about a programming language that I had never worked with before. One of the features of python I was impressed by was the interactive plots (shown below)! Being able to adjust the mean and standard deviation and watch the plot instantly change was really different from the stuff we focused on in R.
+![](/post/2020-12-10-learning-about-python_files/project3blog.PNG)
+You can use the reticulate package to have R and Python talk to each other too!
+```{r}
+library(reticulate)
+partone <- "Thank you Nathaniel"
+```
+```{python}
+parttwo = "for a great semester! :)"
+print(r.partone,parttwo)
+```
